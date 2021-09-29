@@ -102,7 +102,8 @@ void GripperActionController<HardwareInterface>::accepted_callback(
     // This is the non-realtime command_struct
     // We use command_ for sharing
     command_struct_.position_ = goal_handle->get_goal()->command.position;
-    command_struct_.max_effort_ = goal_handle->get_goal()->command.max_effort;
+    if( goal_handle->get_goal()->command.max_effort != 0.0 && !std::isnan(goal_handle->get_goal()->command.max_effort))
+      command_struct_.max_effort_ = goal_handle->get_goal()->command.max_effort;
     command_.writeFromNonRT(command_struct_);
 
     pre_alloc_result_->reached_goal = false;
@@ -147,6 +148,7 @@ void GripperActionController<HardwareInterface>::set_hold_position()
 {
   command_struct_.position_ = joint_position_state_interface_->get().get_value();
   command_struct_.max_effort_ = default_max_effort_;
+  RCLCPP_DEBUG(node_->get_logger(), "Holding position: %f, max_effort: %f", command_struct_.position_, command_struct_.max_effort_);
   command_.writeFromNonRT(command_struct_);
 }
 
@@ -162,6 +164,7 @@ void GripperActionController<HardwareInterface>::check_for_success(
 
   if (fabs(error_position) < goal_tolerance_)
   {
+    //RCLCPP_INFO(node_->get_logger(), "Succeeded. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     pre_alloc_result_->effort = computed_command_;
     pre_alloc_result_->position = current_position;
     pre_alloc_result_->reached_goal = true;
@@ -174,9 +177,11 @@ void GripperActionController<HardwareInterface>::check_for_success(
     if (fabs(current_velocity) > stall_velocity_threshold_)
     {
       last_movement_time_ = time;
+      //RCLCPP_INFO(node_->get_logger(), "Moving. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     }
     else if ((time - last_movement_time_).seconds() > stall_timeout_)
     {
+      //RCLCPP_INFO(node_->get_logger(), "Aborting. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
       pre_alloc_result_->effort = computed_command_;
       pre_alloc_result_->position = current_position;
       pre_alloc_result_->reached_goal = false;
@@ -227,17 +232,17 @@ CallbackReturn GripperActionController<HardwareInterface>::on_activate(
   auto position_command_interface_it = std::find_if(
     command_interfaces_.begin(), command_interfaces_.end(),
     [](const hardware_interface::LoanedCommandInterface & command_interface) {
-      return command_interface.get_interface_name() == hardware_interface::HW_IF_POSITION;
+      return command_interface.get_interface_name() == HardwareInterface;
     });
   if (position_command_interface_it == command_interfaces_.end())
   {
-    RCLCPP_ERROR(node_->get_logger(), "Expected 1 position command interface");
+    RCLCPP_ERROR(node_->get_logger(), "Expected 1 %s command interface", HardwareInterface);
     return CallbackReturn::ERROR;
   }
   if (position_command_interface_it->get_name() != joint_name_)
   {
     RCLCPP_ERROR_STREAM(
-      node_->get_logger(), "Position command interface is different than joint name `"
+      node_->get_logger(), HardwareInterface << " command interface is different than joint name `"
                              << position_command_interface_it->get_name() << "` != `" << joint_name_
                              << "`");
     return CallbackReturn::ERROR;
@@ -324,7 +329,7 @@ GripperActionController<HardwareInterface>::command_interface_configuration() co
 {
   return {
     controller_interface::interface_configuration_type::INDIVIDUAL,
-    {joint_name_ + "/" + hardware_interface::HW_IF_POSITION}};
+    {joint_name_ + "/" + HardwareInterface}};
 }
 
 template <const char * HardwareInterface>
