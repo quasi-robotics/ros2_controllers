@@ -144,7 +144,7 @@ public:
     const auto i_clamp = auto_declare<double>(node, prefix + ".i_clamp", 0.0);
     RCLCPP_DEBUG(node->get_logger(), "Initializing PID controller with p: %f, i: %f, d: %f, i_clamp: %f", k_p, k_i, k_d, i_clamp);
     // Initialize PID
-    pid_ = std::make_shared<control_toolbox::Pid>(k_p, k_i, k_d, i_clamp, -i_clamp);
+    pid_ = std::make_shared<control_toolbox::Pid>(k_p, k_i, k_d, i_clamp, -i_clamp, true);
     return true;
   }
 
@@ -174,9 +174,9 @@ public:
     const auto period = last_update_time_ > std::chrono::steady_clock::time_point() ? std::chrono::steady_clock::now() - last_update_time_ : std::chrono::nanoseconds::zero();
     // Update PIDs
     double command = pid_->computeCommand(error_position, error_velocity, period.count());
-    //std::cerr << joint_handle_->get().get_name() << ": command: " << command << ", max_allowed_effort: " << max_allowed_effort << ", error_position: " << error_position << ", error_velocity: " << error_velocity << std::endl;
     command = std::min<double>(
       fabs(max_allowed_effort), std::max<double>(-fabs(max_allowed_effort), command));
+    //RCLCPP_INFO_STREAM(rclcpp::get_logger("gazebo_ros2_control"), joint_handle_->get().get_name() << ": command: " << command << ", max_allowed_effort: " << max_allowed_effort << ", error_position: " << error_position << ", error_velocity: " << error_velocity);
     joint_handle_->get().set_value(command);
     last_update_time_ = std::chrono::steady_clock::now();
     return command;
