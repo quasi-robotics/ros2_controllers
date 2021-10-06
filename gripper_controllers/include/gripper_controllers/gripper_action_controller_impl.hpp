@@ -164,7 +164,7 @@ void GripperActionController<HardwareInterface>::check_for_success(
 
   if (fabs(error_position) < goal_tolerance_)
   {
-    //RCLCPP_INFO(node_->get_logger(), "Succeeded. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+//    RCLCPP_INFO(node_->get_logger(), "Succeeded. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     pre_alloc_result_->effort = computed_command_;
     pre_alloc_result_->position = current_position;
     pre_alloc_result_->reached_goal = true;
@@ -177,11 +177,11 @@ void GripperActionController<HardwareInterface>::check_for_success(
     if (fabs(current_velocity) > stall_velocity_threshold_)
     {
       last_movement_time_ = time;
-      //RCLCPP_INFO(node_->get_logger(), "Moving. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+//      RCLCPP_INFO(node_->get_logger(), "Moving. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     }
     else if ((time - last_movement_time_).seconds() > stall_timeout_)
     {
-      //RCLCPP_INFO(node_->get_logger(), "Aborting. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+//      RCLCPP_INFO(node_->get_logger(), "Aborting. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
       pre_alloc_result_->effort = computed_command_;
       pre_alloc_result_->position = current_position;
       pre_alloc_result_->reached_goal = false;
@@ -189,6 +189,8 @@ void GripperActionController<HardwareInterface>::check_for_success(
       rt_active_goal_->setAborted(pre_alloc_result_);
       rt_active_goal_.reset();
     }
+//    else
+//      RCLCPP_INFO(node_->get_logger(), "Stalling. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
   }
 }
 
