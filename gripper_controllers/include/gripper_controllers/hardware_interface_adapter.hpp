@@ -27,10 +27,10 @@
 // TODO(JafarAbdi): Remove experimental once the default standard is C++17
 #include "experimental/optional"
 
-#include "rclcpp/time.hpp"
-
 #include "control_toolbox/pid.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 /**
  * \brief Helper class to simplify integrating the GripperActionController with
@@ -47,7 +47,7 @@ public:
   bool init(
     std::experimental::optional<
       std::reference_wrapper<hardware_interface::LoanedCommandInterface>> /* joint_handle */,
-    const rclcpp::Node::SharedPtr & /* node */)
+    std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & /* node */)
   {
     return false;
   }
@@ -74,7 +74,7 @@ public:
   bool init(
     std::experimental::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
       joint_handle,
-    const rclcpp::Node::SharedPtr & /* node */)
+    const rclcpp_lifecycle::LifecycleNode::SharedPtr & /* node */)
   {
     joint_handle_ = joint_handle;
     return true;
@@ -117,7 +117,7 @@ class HardwareInterfaceAdapter<hardware_interface::HW_IF_EFFORT>
 public:
   template <typename ParameterT>
   auto auto_declare(
-    const rclcpp::Node::SharedPtr & node, const std::string & name,
+    const std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & node, const std::string & name,
     const ParameterT & default_value)
   {
     if (!node->has_parameter(name))
@@ -133,7 +133,7 @@ public:
   bool init(
     std::experimental::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
       joint_handle,
-    const rclcpp::Node::SharedPtr & node)
+    const std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & node)
   {
     joint_handle_ = joint_handle;
     // Init PID gains from ROS parameter server

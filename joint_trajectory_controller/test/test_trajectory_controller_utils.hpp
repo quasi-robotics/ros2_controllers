@@ -36,6 +36,7 @@ const std::vector<double> INITIAL_POS_JOINTS = {
   INITIAL_POS_JOINT1, INITIAL_POS_JOINT2, INITIAL_POS_JOINT3};
 const std::vector<double> INITIAL_VEL_JOINTS = {0.0, 0.0, 0.0};
 const std::vector<double> INITIAL_ACC_JOINTS = {0.0, 0.0, 0.0};
+const std::vector<double> INITIAL_EFF_JOINTS = {0.0, 0.0, 0.0};
 }  // namespace
 
 namespace test_trajectory_controllers
@@ -98,6 +99,8 @@ public:
 
   bool has_velocity_command_interface() { return has_velocity_command_interface_; }
 
+  bool has_effort_command_interface() { return has_effort_command_interface_; }
+
   rclcpp::WaitSet joint_cmd_sub_wait_set_;
 };
 
@@ -117,6 +120,7 @@ public:
     joint_state_vel_.resize(joint_names_.size(), 0.0);
     joint_acc_.resize(joint_names_.size(), 0.0);
     joint_state_acc_.resize(joint_names_.size(), 0.0);
+    joint_eff_.resize(joint_names_.size(), 0.0);
     // Default interface values - they will be overwritten by parameterized tests
     command_interface_types_ = {"position"};
     state_interface_types_ = {"position", "velocity"};
@@ -171,24 +175,24 @@ public:
     rclcpp::Executor * executor = nullptr, bool separate_cmd_and_state_values = false)
   {
     SetUpTrajectoryController(use_local_parameters);
-    traj_node_ = traj_controller_->get_node();
+
     for (const auto & param : parameters)
     {
-      traj_node_->set_parameter(param);
+      traj_controller_->get_node()->set_parameter(param);
     }
     if (executor)
     {
-      executor->add_node(traj_node_->get_node_base_interface());
+      executor->add_node(traj_controller_->get_node()->get_node_base_interface());
     }
 
     // ignore velocity tolerances for this test since they aren't committed in test_robot->write()
     rclcpp::Parameter stopped_velocity_parameters("constraints.stopped_velocity_tolerance", 0.0);
-    traj_node_->set_parameter(stopped_velocity_parameters);
+    traj_controller_->get_node()->set_parameter(stopped_velocity_parameters);
 
     // set pid parameters before configure
     SetPidParameters();
+    traj_controller_->get_node()->configure();
 
-    traj_controller_->configure();
     ActivateTrajectoryController(separate_cmd_and_state_values);
   }
 
@@ -199,6 +203,7 @@ public:
     pos_cmd_interfaces_.reserve(joint_names_.size());
     vel_cmd_interfaces_.reserve(joint_names_.size());
     acc_cmd_interfaces_.reserve(joint_names_.size());
+    eff_cmd_interfaces_.reserve(joint_names_.size());
     pos_state_interfaces_.reserve(joint_names_.size());
     vel_state_interfaces_.reserve(joint_names_.size());
     acc_state_interfaces_.reserve(joint_names_.size());
@@ -210,6 +215,8 @@ public:
         joint_names_[i], hardware_interface::HW_IF_VELOCITY, &joint_vel_[i]));
       acc_cmd_interfaces_.emplace_back(hardware_interface::CommandInterface(
         joint_names_[i], hardware_interface::HW_IF_ACCELERATION, &joint_acc_[i]));
+      eff_cmd_interfaces_.emplace_back(hardware_interface::CommandInterface(
+        joint_names_[i], hardware_interface::HW_IF_EFFORT, &joint_eff_[i]));
 
       pos_state_interfaces_.emplace_back(hardware_interface::StateInterface(
         joint_names_[i], hardware_interface::HW_IF_POSITION,
@@ -228,6 +235,8 @@ public:
       cmd_interfaces.back().set_value(INITIAL_VEL_JOINTS[i]);
       cmd_interfaces.emplace_back(acc_cmd_interfaces_.back());
       cmd_interfaces.back().set_value(INITIAL_ACC_JOINTS[i]);
+      cmd_interfaces.emplace_back(eff_cmd_interfaces_.back());
+      cmd_interfaces.back().set_value(INITIAL_EFF_JOINTS[i]);
       joint_state_pos_[i] = INITIAL_POS_JOINTS[i];
       joint_state_vel_[i] = INITIAL_VEL_JOINTS[i];
       joint_state_acc_[i] = INITIAL_ACC_JOINTS[i];
@@ -237,7 +246,7 @@ public:
     }
 
     traj_controller_->assign_interfaces(std::move(cmd_interfaces), std::move(state_interfaces));
-    traj_controller_->activate();
+    traj_controller_->get_node()->activate();
   }
 
   static void TearDownTestCase() { rclcpp::shutdown(); }
@@ -391,7 +400,6 @@ public:
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr trajectory_publisher_;
 
   std::shared_ptr<TestableJointTrajectoryController> traj_controller_;
-  std::shared_ptr<rclcpp::Node> traj_node_;
   rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr
     state_subscriber_;
   mutable std::mutex state_mutex_;
@@ -400,12 +408,14 @@ public:
   std::vector<double> joint_pos_;
   std::vector<double> joint_vel_;
   std::vector<double> joint_acc_;
+  std::vector<double> joint_eff_;
   std::vector<double> joint_state_pos_;
   std::vector<double> joint_state_vel_;
   std::vector<double> joint_state_acc_;
   std::vector<hardware_interface::CommandInterface> pos_cmd_interfaces_;
   std::vector<hardware_interface::CommandInterface> vel_cmd_interfaces_;
   std::vector<hardware_interface::CommandInterface> acc_cmd_interfaces_;
+  std::vector<hardware_interface::CommandInterface> eff_cmd_interfaces_;
   std::vector<hardware_interface::StateInterface> pos_state_interfaces_;
   std::vector<hardware_interface::StateInterface> vel_state_interfaces_;
   std::vector<hardware_interface::StateInterface> acc_state_interfaces_;
