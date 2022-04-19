@@ -49,7 +49,7 @@ pluginlib_export_plugin_description_file(controller_interface ros_control_plugin
 #############
 
 # Install headers
-install(DIRECTORY include/${PROJECT_NAME}/
+install(DIRECTORY include/
   DESTINATION include
 )
 
@@ -74,4 +74,11 @@ if(BUILD_TESTING)
   )
 endif()
 
+ament_export_dependencies(
+        rclcpp
+        controller_interface
+)
+ament_export_include_directories(
+        include
+)
 ament_package()
