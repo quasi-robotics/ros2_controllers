@@ -81,9 +81,9 @@ controller_interface::return_type GripperActionController<HardwareInterface>::up
 
 template <const char * HardwareInterface>
 rclcpp_action::GoalResponse GripperActionController<HardwareInterface>::goal_callback(
-  const rclcpp_action::GoalUUID &, std::shared_ptr<const GripperCommandAction::Goal>)
+  const rclcpp_action::GoalUUID &, std::shared_ptr<const GripperCommandAction::Goal> goal)
 {
-  RCLCPP_INFO(get_node()->get_logger(), "Received & accepted new action goal");
+  RCLCPP_INFO(get_node()->get_logger(), "Received & accepted new action goal. position: %f, max_effort: %f: ", goal->command.position, goal->command.max_effort);
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
