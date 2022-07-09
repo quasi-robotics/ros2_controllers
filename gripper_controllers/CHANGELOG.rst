@@ -2,6 +2,14 @@
 Changelog for package gripper_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.8.0 (2022-07-09)
+------------------
+
+2.7.0 (2022-07-03)
+------------------
+* Update controllers with new get_name hardware interfaces (`#369 <https://github.com/ros-controls/ros2_controllers/issues/369>`_)
+* Contributors: Lucas Schulze
+
 2.6.0 (2022-06-18)
 ------------------
 * CMakeLists cleanup (`#362 <https://github.com/ros-controls/ros2_controllers/issues/362>`_)

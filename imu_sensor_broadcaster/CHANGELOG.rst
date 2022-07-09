@@ -2,6 +2,12 @@
 Changelog for package imu_sensor_broadcaster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.8.0 (2022-07-09)
+------------------
+
+2.7.0 (2022-07-03)
+------------------
+
 2.6.0 (2022-06-18)
 ------------------
 * CMakeLists cleanup (`#362 <https://github.com/ros-controls/ros2_controllers/issues/362>`_)

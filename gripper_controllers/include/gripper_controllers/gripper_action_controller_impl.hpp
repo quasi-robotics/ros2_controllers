@@ -239,11 +239,11 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 %s command interface", HardwareInterface);
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (position_command_interface_it->get_name() != joint_name_)
+  if (position_command_interface_it->get_prefix_name() != joint_name_)
   {
     RCLCPP_ERROR_STREAM(
       get_node()->get_logger(), HardwareInterface << " command interface is different than joint name `"
-                             << position_command_interface_it->get_name() << "` != `" << joint_name_
+                             << position_command_interface_it->get_prefix_name() << "` != `" << joint_name_
                              << "`");
     return controller_interface::CallbackReturn::ERROR;
   }
@@ -257,11 +257,11 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 position state interface");
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (position_state_interface_it->get_name() != joint_name_)
+  if (position_state_interface_it->get_prefix_name() != joint_name_)
   {
     RCLCPP_ERROR_STREAM(
       get_node()->get_logger(), "Position state interface is different than joint name `"
-                                  << position_state_interface_it->get_name() << "` != `"
+                                  << position_state_interface_it->get_prefix_name() << "` != `"
                                   << joint_name_ << "`");
     return controller_interface::CallbackReturn::ERROR;
   }
@@ -275,11 +275,11 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 velocity state interface");
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (velocity_state_interface_it->get_name() != joint_name_)
+  if (velocity_state_interface_it->get_prefix_name() != joint_name_)
   {
     RCLCPP_ERROR_STREAM(
       get_node()->get_logger(), "Velocity command interface is different than joint name `"
-                                  << velocity_state_interface_it->get_name() << "` != `"
+                                  << velocity_state_interface_it->get_prefix_name() << "` != `"
                                   << joint_name_ << "`");
     return controller_interface::CallbackReturn::ERROR;
   }
