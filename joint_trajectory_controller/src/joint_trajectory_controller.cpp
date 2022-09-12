@@ -56,6 +56,8 @@ controller_interface::CallbackReturn JointTrajectoryController::on_init()
   {
     // with the lifecycle node being initialized, we can declare parameters
     joint_names_ = auto_declare<std::vector<std::string>>("joints", joint_names_);
+    command_joint_names_ =
+      auto_declare<std::vector<std::string>>("command_joints", command_joint_names_);
     command_interface_types_ =
       auto_declare<std::vector<std::string>>("command_interfaces", command_interface_types_);
     state_interface_types_ =
@@ -97,7 +99,7 @@ JointTrajectoryController::command_interface_configuration() const
     std::exit(EXIT_FAILURE);
   }
   conf.names.reserve(dof_ * command_interface_types_.size());
-  for (const auto & joint_name : joint_names_)
+  for (const auto & joint_name : command_joint_names_)
   {
     for (const auto & interface_type : command_interface_types_)
     {
@@ -134,7 +136,8 @@ controller_interface::return_type JointTrajectoryController::update(
   auto compute_error_for_joint = [&](
                                    JointTrajectoryPoint & error, int index,
                                    const JointTrajectoryPoint & current,
-                                   const JointTrajectoryPoint & desired) {
+                                   const JointTrajectoryPoint & desired)
+  {
     // error defined as the difference between current and desired
     error.positions[index] =
       angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
@@ -162,12 +165,13 @@ controller_interface::return_type JointTrajectoryController::update(
   // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
   // changed, but its value only?
   auto assign_interface_from_point =
-    [&](auto & joint_interface, const std::vector<double> & trajectory_point_interface) {
-      for (size_t index = 0; index < dof_; ++index)
-      {
-        joint_interface[index].get().set_value(trajectory_point_interface[index]);
-      }
-    };
+    [&](auto & joint_interface, const std::vector<double> & trajectory_point_interface)
+  {
+    for (size_t index = 0; index < dof_; ++index)
+    {
+      joint_interface[index].get().set_value(trajectory_point_interface[index]);
+    }
+  };
 
   // current state update
   state_current_.time_from_start.set__sec(0);
@@ -368,12 +372,13 @@ controller_interface::return_type JointTrajectoryController::update(
 void JointTrajectoryController::read_state_from_hardware(JointTrajectoryPoint & state)
 {
   auto assign_point_from_interface =
-    [&](std::vector<double> & trajectory_point_interface, const auto & joint_interface) {
-      for (size_t index = 0; index < dof_; ++index)
-      {
-        trajectory_point_interface[index] = joint_interface[index].get().get_value();
-      }
-    };
+    [&](std::vector<double> & trajectory_point_interface, const auto & joint_interface)
+  {
+    for (size_t index = 0; index < dof_; ++index)
+    {
+      trajectory_point_interface[index] = joint_interface[index].get().get_value();
+    }
+  };
 
   // Assign values from the hardware
   // Position states always exist
@@ -406,17 +411,20 @@ bool JointTrajectoryController::read_state_from_command_interfaces(JointTrajecto
   bool has_values = true;
 
   auto assign_point_from_interface =
-    [&](std::vector<double> & trajectory_point_interface, const auto & joint_interface) {
-      for (size_t index = 0; index < dof_; ++index)
-      {
-        trajectory_point_interface[index] = joint_interface[index].get().get_value();
-      }
-    };
+    [&](std::vector<double> & trajectory_point_interface, const auto & joint_interface)
+  {
+    for (size_t index = 0; index < dof_; ++index)
+    {
+      trajectory_point_interface[index] = joint_interface[index].get().get_value();
+    }
+  };
 
-  auto interface_has_values = [](const auto & joint_interface) {
-    return std::find_if(joint_interface.begin(), joint_interface.end(), [](const auto & interface) {
-             return std::isnan(interface.get().get_value());
-           }) == joint_interface.end();
+  auto interface_has_values = [](const auto & joint_interface)
+  {
+    return std::find_if(
+             joint_interface.begin(), joint_interface.end(),
+             [](const auto & interface)
+             { return std::isnan(interface.get().get_value()); }) == joint_interface.end();
   };
 
   // Assign values from the command interfaces as state. Therefore needs check for both.
@@ -487,6 +495,7 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
 
   dof_ = joint_names_.size();
 
+  // TODO(destogl): why is this here? Add comment or move
   if (!reset())
   {
     return CallbackReturn::FAILURE;
@@ -494,7 +503,23 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
 
   if (joint_names_.empty())
   {
+    // TODO(destogl): is this correct? Can we really move-on if no joint names are not provided?
     RCLCPP_WARN(logger, "'joints' parameter is empty.");
+  }
+
+  command_joint_names_ = get_node()->get_parameter("command_joints").as_string_array();
+
+  if (command_joint_names_.empty())
+  {
+    command_joint_names_ = joint_names_;
+    RCLCPP_INFO(
+      logger, "No specific joint names are used for command interfaces. Using 'joints' parameter.");
+  }
+  else if (command_joint_names_.size() != joint_names_.size())
+  {
+    RCLCPP_ERROR(
+      logger, "'command_joints' parameter has to have the same size as 'joints' parameter.");
+    return CallbackReturn::FAILURE;
   }
 
   // Specialized, child controllers set interfaces before calling configure function.
@@ -586,12 +611,13 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
     // Init PID gains from ROS parameter server
     for (size_t i = 0; i < pids_.size(); ++i)
     {
-      const std::string prefix = "gains." + joint_names_[i];
+      const std::string prefix = "gains." + command_joint_names_[i];
       const auto k_p = auto_declare<double>(prefix + ".p", 0.0);
       const auto k_i = auto_declare<double>(prefix + ".i", 0.0);
       const auto k_d = auto_declare<double>(prefix + ".d", 0.0);
       const auto i_clamp = auto_declare<double>(prefix + ".i_clamp", 0.0);
-      ff_velocity_scale_[i] = auto_declare<double>("ff_velocity_scale/" + joint_names_[i], 0.0);
+      ff_velocity_scale_[i] =
+        auto_declare<double>("ff_velocity_scale/" + command_joint_names_[i], 0.0);
       // Initialize PID
       pids_[i] = std::make_shared<control_toolbox::Pid>(k_p, k_i, k_d, i_clamp, -i_clamp);
     }
@@ -676,7 +702,8 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
     }
   }
 
-  auto get_interface_list = [](const std::vector<std::string> & interface_types) {
+  auto get_interface_list = [](const std::vector<std::string> & interface_types)
+  {
     std::stringstream ss_interfaces;
     for (size_t index = 0; index < interface_types.size(); ++index)
     {
@@ -695,7 +722,7 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
     get_interface_list(command_interface_types_).c_str(),
     get_interface_list(state_interface_types_).c_str());
 
-  default_tolerances_ = get_segment_tolerances(*get_node(), joint_names_);
+  default_tolerances_ = get_segment_tolerances(*get_node(), command_joint_names_);
 
   // Read parameters customizing controller for special cases
   open_loop_control_ = get_node()->get_parameter("open_loop_control").get_value<bool>();
@@ -731,7 +758,7 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
   state_publisher_ = std::make_unique<StatePublisher>(publisher_);
 
   state_publisher_->lock();
-  state_publisher_->msg_.joint_names = joint_names_;
+  state_publisher_->msg_.joint_names = command_joint_names_;
   state_publisher_->msg_.desired.positions.resize(dof_);
   state_publisher_->msg_.desired.velocities.resize(dof_);
   state_publisher_->msg_.desired.accelerations.resize(dof_);
@@ -790,7 +817,7 @@ controller_interface::CallbackReturn JointTrajectoryController::on_activate(
       std::find(allowed_interface_types_.begin(), allowed_interface_types_.end(), interface);
     auto index = std::distance(allowed_interface_types_.begin(), it);
     if (!controller_interface::get_ordered_interfaces(
-          command_interfaces_, joint_names_, interface, joint_command_interface_[index]))
+          command_interfaces_, command_joint_names_, interface, joint_command_interface_[index]))
     {
       RCLCPP_ERROR(
         get_node()->get_logger(), "Expected %zu '%s' command interfaces, got %zu.", dof_,
@@ -1060,9 +1087,12 @@ void JointTrajectoryController::goal_accepted_callback(
   rt_goal->execute();
   rt_active_goal_.writeFromNonRT(rt_goal);
 
+  // Set smartpointer to expire for create_wall_timer to delete previous entry from timer list
+  goal_handle_timer_.reset();
+
   // Setup goal status checking timer
   goal_handle_timer_ = get_node()->create_wall_timer(
-    action_monitor_period_.to_chrono<std::chrono::seconds>(),
+    action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
     std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
 }
 
@@ -1133,7 +1163,8 @@ void JointTrajectoryController::sort_to_local_joint_order(
   std::vector<size_t> mapping_vector = mapping(trajectory_msg->joint_names, joint_names_);
   auto remap = [this](
                  const std::vector<double> & to_remap,
-                 const std::vector<size_t> & mapping) -> std::vector<double> {
+                 const std::vector<size_t> & mapping) -> std::vector<double>
+  {
     if (to_remap.empty())
     {
       return to_remap;
