@@ -137,7 +137,7 @@ public:
   {
     joint_handle_ = joint_handle;
     // Init PID gains from ROS parameter server
-    const std::string prefix = "gains." + joint_handle_->get().get_name();
+    const std::string prefix = "gains." + joint_handle_->get().get_prefix_name();
     const auto k_p = auto_declare<double>(node, prefix + ".p", 0.0);
     const auto k_i = auto_declare<double>(node, prefix + ".i", 0.0);
     const auto k_d = auto_declare<double>(node, prefix + ".d", 0.0);
@@ -173,10 +173,9 @@ public:
     // Time since the last call to update
     const auto period = last_update_time_ > std::chrono::steady_clock::time_point() ? std::chrono::steady_clock::now() - last_update_time_ : std::chrono::nanoseconds::zero();
     // Update PIDs
-    double command = pid_->computeCommand(error_position, error_velocity, period.count());
-    command = std::min<double>(
-      fabs(max_allowed_effort), std::max<double>(-fabs(max_allowed_effort), command));
-    //RCLCPP_INFO_STREAM(rclcpp::get_logger("gazebo_ros2_control"), joint_handle_->get().get_name() << ": command: " << command << ", max_allowed_effort: " << max_allowed_effort << ", error_position: " << error_position << ", error_velocity: " << error_velocity);
+    double raw_command = pid_->computeCommand(error_position, error_velocity, period.count());
+    double command = std::min<double>(fabs(max_allowed_effort), std::max<double>(-fabs(max_allowed_effort), raw_command));
+    //RCLCPP_INFO_STREAM(rclcpp::get_logger("gazebo_ros2_control"), joint_handle_->get().get_prefix_name() << ": raw_command: " << raw_command << ", command: " << command << ", max_allowed_effort: " << max_allowed_effort << ", error_position: " << error_position << ", error_velocity: " << error_velocity);
     joint_handle_->get().set_value(command);
     last_update_time_ = std::chrono::steady_clock::now();
     return command;

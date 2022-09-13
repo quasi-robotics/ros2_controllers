@@ -84,7 +84,7 @@ template <const char * HardwareInterface>
 rclcpp_action::GoalResponse GripperActionController<HardwareInterface>::goal_callback(
   const rclcpp_action::GoalUUID &, std::shared_ptr<const GripperCommandAction::Goal> goal)
 {
-  RCLCPP_INFO(get_node()->get_logger(), "Received & accepted new action goal. position: %f, max_effort: %f: ", goal->command.position, goal->command.max_effort);
+  RCLCPP_INFO(get_node()->get_logger(), "Received & accepted new action goal. position: %f, max_effort: %f", goal->command.position, goal->command.max_effort);
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
@@ -101,8 +101,14 @@ void GripperActionController<HardwareInterface>::accepted_callback(
     // This is the non-realtime command_struct
     // We use command_ for sharing
     command_struct_.position_ = goal_handle->get_goal()->command.position;
-    if( goal_handle->get_goal()->command.max_effort != 0.0 && !std::isnan(goal_handle->get_goal()->command.max_effort))
+    if(goal_handle->get_goal()->command.max_effort != 0.0 && !std::isnan(goal_handle->get_goal()->command.max_effort)) {
       command_struct_.max_effort_ = goal_handle->get_goal()->command.max_effort;
+      //RCLCPP_DEBUG(get_node()->get_logger(), "max_effort specified in goal, setting it to: %g", command_struct_.max_effort_);
+    }
+    else {
+      command_struct_.max_effort_ = default_max_effort_;
+      //RCLCPP_DEBUG(get_node()->get_logger(), "mex_effort not specified in goal, setting it to: %g", command_struct_.max_effort_);
+    }
     command_.writeFromNonRT(command_struct_);
 
     pre_alloc_result_->reached_goal = false;
@@ -163,12 +169,12 @@ void GripperActionController<HardwareInterface>::check_for_success(
 
   if (fabs(error_position) < goal_tolerance_)
   {
-//    RCLCPP_INFO(node_->get_logger(), "Succeeded. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+    //RCLCPP_DEBUG(get_node()->get_logger(), "Succeeded. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     pre_alloc_result_->effort = computed_command_;
     pre_alloc_result_->position = current_position;
     pre_alloc_result_->reached_goal = true;
     pre_alloc_result_->stalled = false;
-    RCLCPP_DEBUG(get_node()->get_logger(), "Successfully moved to goal.");
+    //RCLCPP_DEBUG(get_node()->get_logger(), "Successfully moved to goal.");
     rt_active_goal_->setSucceeded(pre_alloc_result_);
     rt_active_goal_.reset();
   }
@@ -177,29 +183,29 @@ void GripperActionController<HardwareInterface>::check_for_success(
     if (fabs(current_velocity) > stall_velocity_threshold_)
     {
       last_movement_time_ = time;
-//      RCLCPP_INFO(node_->get_logger(), "Moving. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+      //RCLCPP_DEBUG(get_node()->get_logger(), "Moving. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     }
     else if ((time - last_movement_time_).seconds() > stall_timeout_)
     {
-//      RCLCPP_INFO(node_->get_logger(), "Aborting. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+      //RCLCPP_DEBUG(get_node()->get_logger(), "Aborting. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
       pre_alloc_result_->effort = computed_command_;
       pre_alloc_result_->position = current_position;
       pre_alloc_result_->reached_goal = false;
       pre_alloc_result_->stalled = true;
       if (allow_stalling_)
       {
-        RCLCPP_DEBUG(get_node()->get_logger(), "Stall detected moving to goal. Returning success.");
+        //RCLCPP_DEBUG(get_node()->get_logger(), "Stall detected moving to goal. Returning success.");
         rt_active_goal_->setSucceeded(pre_alloc_result_);
       }
       else
       {
-        RCLCPP_DEBUG(get_node()->get_logger(), "Stall detected moving to goal. Aborting action!");
+        //RCLCPP_DEBUG(get_node()->get_logger(), "Stall detected moving to goal. Aborting action!");
         rt_active_goal_->setAborted(pre_alloc_result_);
       }
       rt_active_goal_.reset();
     }
-//    else
-//      RCLCPP_INFO(node_->get_logger(), "Stalling. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
+    //else
+    //  RCLCPP_DEBUG(get_node()->get_logger(), "Stalling. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
   }
 }
 
