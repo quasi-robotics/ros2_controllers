@@ -24,8 +24,6 @@
 #include <string>
 #include <vector>
 #include <chrono>
-// TODO(JafarAbdi): Remove experimental once the default standard is C++17
-#include "experimental/optional"
 
 #include "control_toolbox/pid.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -45,7 +43,7 @@ class HardwareInterfaceAdapter
 {
 public:
   bool init(
-    std::experimental::optional<
+    std::optional<
       std::reference_wrapper<hardware_interface::LoanedCommandInterface>> /* joint_handle */,
     std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & /* node */)
   {
@@ -72,8 +70,7 @@ class HardwareInterfaceAdapter<hardware_interface::HW_IF_POSITION>
 {
 public:
   bool init(
-    std::experimental::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
-      joint_handle,
+    std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> joint_handle,
     const rclcpp_lifecycle::LifecycleNode::SharedPtr & /* node */)
   {
     joint_handle_ = joint_handle;
@@ -93,8 +90,7 @@ public:
   }
 
 private:
-  std::experimental::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
-    joint_handle_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> joint_handle_;
 };
 
 /**
@@ -131,8 +127,7 @@ public:
   }
 
   bool init(
-    std::experimental::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
-      joint_handle,
+    std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> joint_handle,
     const std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & node)
   {
     joint_handle_ = joint_handle;
@@ -184,8 +179,7 @@ public:
 private:
   using PidPtr = std::shared_ptr<control_toolbox::Pid>;
   PidPtr pid_;
-  std::experimental::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
-    joint_handle_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> joint_handle_;
   std::chrono::steady_clock::time_point last_update_time_;
 };
 

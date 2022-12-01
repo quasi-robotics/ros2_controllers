@@ -41,14 +41,8 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
 {
   try
   {
-    // with the lifecycle node being initialized, we can declare parameters
-    auto_declare<double>("action_monitor_rate", 20.0);
-    joint_name_ = auto_declare<std::string>("joint", joint_name_);
-    auto_declare<double>("goal_tolerance", 0.01);
-    auto_declare<double>("max_effort", 0.0);
-    auto_declare<bool>("allow_stalling", false);
-    auto_declare<double>("stall_velocity_threshold", 0.001);
-    auto_declare<double>("stall_timeout", 1.0);
+    param_listener_ = std::make_shared<ParamListener>(get_node());
+    params_ = param_listener_->get_params();
   }
   catch (const std::exception & e)
   {
@@ -106,7 +100,7 @@ void GripperActionController<HardwareInterface>::accepted_callback(
       //RCLCPP_DEBUG(get_node()->get_logger(), "max_effort specified in goal, setting it to: %g", command_struct_.max_effort_);
     }
     else {
-      command_struct_.max_effort_ = default_max_effort_;
+      command_struct_.max_effort_ = params_.max_effort;
       //RCLCPP_DEBUG(get_node()->get_logger(), "mex_effort not specified in goal, setting it to: %g", command_struct_.max_effort_);
     }
     command_.writeFromNonRT(command_struct_);
@@ -152,7 +146,7 @@ template <const char * HardwareInterface>
 void GripperActionController<HardwareInterface>::set_hold_position()
 {
   command_struct_.position_ = joint_position_state_interface_->get().get_value();
-  command_struct_.max_effort_ = default_max_effort_;
+  command_struct_.max_effort_ = params_.max_effort;
   RCLCPP_DEBUG(get_node()->get_logger(), "Holding position: %f, max_effort: %f", command_struct_.position_, command_struct_.max_effort_);
   command_.writeFromNonRT(command_struct_);
 }
@@ -167,7 +161,7 @@ void GripperActionController<HardwareInterface>::check_for_success(
     return;
   }
 
-  if (fabs(error_position) < goal_tolerance_)
+  if (fabs(error_position) < params_.goal_tolerance)
   {
     //RCLCPP_DEBUG(get_node()->get_logger(), "Succeeded. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     pre_alloc_result_->effort = computed_command_;
@@ -180,19 +174,20 @@ void GripperActionController<HardwareInterface>::check_for_success(
   }
   else
   {
-    if (fabs(current_velocity) > stall_velocity_threshold_)
+    if (fabs(current_velocity) > params_.stall_velocity_threshold)
     {
       last_movement_time_ = time;
       //RCLCPP_DEBUG(get_node()->get_logger(), "Moving. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
     }
-    else if ((time - last_movement_time_).seconds() > stall_timeout_)
+    else if ((time - last_movement_time_).seconds() > params_.stall_timeout)
     {
       //RCLCPP_DEBUG(get_node()->get_logger(), "Aborting. computed_command: %f, error_position: %f, current_position: %f, current_velocity: %f", computed_command_, error_position, current_position, current_velocity);
       pre_alloc_result_->effort = computed_command_;
       pre_alloc_result_->position = current_position;
       pre_alloc_result_->reached_goal = false;
       pre_alloc_result_->stalled = true;
-      if (allow_stalling_)
+
+      if (params_.allow_stalling)
       {
         //RCLCPP_DEBUG(get_node()->get_logger(), "Stall detected moving to goal. Returning success.");
         rt_active_goal_->setSucceeded(pre_alloc_result_);
@@ -214,34 +209,24 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
   const rclcpp_lifecycle::State &)
 {
   const auto logger = get_node()->get_logger();
-
-  // Action status checking update rate
-  const auto action_monitor_rate = get_node()->get_parameter("action_monitor_rate").as_double();
-  action_monitor_period_ = rclcpp::Duration::from_seconds(
-    1.0 / get_node()->get_parameter("action_monitor_rate").as_double());
-  RCLCPP_INFO_STREAM(
-    logger, "Action status changes will be monitored at " << action_monitor_rate << "Hz.");
-
-  // Controlled joint
-  joint_name_ = get_node()->get_parameter("joint").as_string();
-  if (joint_name_.empty())
+  if (!param_listener_)
   {
-    RCLCPP_ERROR(logger, "Could not find joint name on param server");
+    RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
   }
+  params_ = param_listener_->get_params();
 
-  // Default tolerances
-  goal_tolerance_ = get_node()->get_parameter("goal_tolerance").as_double();
-  goal_tolerance_ = fabs(goal_tolerance_);
-  // Max allowable effort
-  default_max_effort_ = get_node()->get_parameter("max_effort").as_double();
-  default_max_effort_ = fabs(default_max_effort_);
-  // Allow stalling will make the action server return success if the
-  // gripper stalls when moving to the goal
-  allow_stalling_ = get_node()->get_parameter("allow_stalling").as_bool();
-  // Stall - stall velocity threshold, stall timeout
-  stall_velocity_threshold_ = get_node()->get_parameter("stall_velocity_threshold").as_double();
-  stall_timeout_ = get_node()->get_parameter("stall_timeout").as_double();
+  // Action status checking update rate
+  action_monitor_period_ = rclcpp::Duration::from_seconds(1.0 / params_.action_monitor_rate);
+  RCLCPP_INFO_STREAM(
+    logger, "Action status changes will be monitored at " << params_.action_monitor_rate << "Hz.");
+
+  // Controlled joint
+  if (params_.joint.empty())
+  {
+    RCLCPP_ERROR(logger, "Joint name cannot be empty");
+    return controller_interface::CallbackReturn::ERROR;
+  }
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -259,12 +244,12 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 %s command interface", HardwareInterface);
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (position_command_interface_it->get_prefix_name() != joint_name_)
+  if (position_command_interface_it->get_prefix_name() != params_.joint)
   {
     RCLCPP_ERROR_STREAM(
       get_node()->get_logger(), HardwareInterface << " command interface is different than joint name `"
-                             << position_command_interface_it->get_prefix_name() << "` != `" << joint_name_
-                             << "`");
+                                  << position_command_interface_it->get_prefix_name() << "` != `"
+                                  << params_.joint << "`");
     return controller_interface::CallbackReturn::ERROR;
   }
   const auto position_state_interface_it = std::find_if(
@@ -276,12 +261,12 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 position state interface");
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (position_state_interface_it->get_prefix_name() != joint_name_)
+  if (position_state_interface_it->get_prefix_name() != params_.joint)
   {
     RCLCPP_ERROR_STREAM(
       get_node()->get_logger(), "Position state interface is different than joint name `"
                                   << position_state_interface_it->get_prefix_name() << "` != `"
-                                  << joint_name_ << "`");
+                                  << params_.joint << "`");
     return controller_interface::CallbackReturn::ERROR;
   }
   const auto velocity_state_interface_it = std::find_if(
@@ -293,12 +278,12 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 velocity state interface");
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (velocity_state_interface_it->get_prefix_name() != joint_name_)
+  if (velocity_state_interface_it->get_prefix_name() != params_.joint)
   {
     RCLCPP_ERROR_STREAM(
       get_node()->get_logger(), "Velocity command interface is different than joint name `"
                                   << velocity_state_interface_it->get_prefix_name() << "` != `"
-                                  << joint_name_ << "`");
+                                  << params_.joint << "`");
     return controller_interface::CallbackReturn::ERROR;
   }
 
@@ -311,7 +296,7 @@ controller_interface::CallbackReturn GripperActionController<HardwareInterface>:
 
   // Command - non RT version
   command_struct_.position_ = joint_position_state_interface_->get().get_value();
-  command_struct_.max_effort_ = default_max_effort_;
+  command_struct_.max_effort_ = params_.max_effort;
   command_.initRT(command_struct_);
 
   // Result
@@ -335,9 +320,9 @@ template <const char * HardwareInterface>
 controller_interface::CallbackReturn GripperActionController<HardwareInterface>::on_deactivate(
   const rclcpp_lifecycle::State &)
 {
-  joint_position_command_interface_ = std::experimental::nullopt;
-  joint_position_state_interface_ = std::experimental::nullopt;
-  joint_velocity_state_interface_ = std::experimental::nullopt;
+  joint_position_command_interface_ = std::nullopt;
+  joint_position_state_interface_ = std::nullopt;
+  joint_velocity_state_interface_ = std::nullopt;
   release_interfaces();
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -348,7 +333,7 @@ GripperActionController<HardwareInterface>::command_interface_configuration() co
 {
   return {
     controller_interface::interface_configuration_type::INDIVIDUAL,
-    {joint_name_ + "/" + HardwareInterface}};
+    {params_.joint + "/" + HardwareInterface}};
 }
 
 template <const char * HardwareInterface>
@@ -357,8 +342,8 @@ GripperActionController<HardwareInterface>::state_interface_configuration() cons
 {
   return {
     controller_interface::interface_configuration_type::INDIVIDUAL,
-    {joint_name_ + "/" + hardware_interface::HW_IF_POSITION,
-     joint_name_ + "/" + hardware_interface::HW_IF_VELOCITY}};
+    {params_.joint + "/" + hardware_interface::HW_IF_POSITION,
+     params_.joint + "/" + hardware_interface::HW_IF_VELOCITY}};
 }
 
 template <const char * HardwareInterface>
