@@ -150,7 +150,7 @@ class JointTrajectoryController(Plugin):
         # Timer for sending commands to active controller
         self._update_cmd_timer = QTimer(self)
         self._update_cmd_timer.setInterval(int(1000.0 / self._cmd_pub_freq))
-        self._update_cmd_timer.timeout.connect(self._update_cmd_cb)
+        # self._update_cmd_timer.timeout.connect(self._update_cmd_cb)
 
         # Timer for updating the joint widgets from the controller state
         self._update_act_pos_timer = QTimer(self)
@@ -413,6 +413,7 @@ class JointTrajectoryController(Plugin):
 
     def _update_single_cmd_cb(self, val, name):
         self._joint_pos[name]["command"] = val
+        self._update_cmd_cb()
 
     def _update_cmd_cb(self):
         dur = []
@@ -461,7 +462,8 @@ def _jtc_joint_names(jtc_info):
     joint_names = []
     for interface in jtc_info.claimed_interfaces:
         name = interface.split("/")[0]
-        joint_names.append(name)
+        if not name in joint_names:
+            joint_names.append(name)
 
     return joint_names
 
