@@ -154,7 +154,9 @@ public:
     joint_handle_->get().set_value(0.0);
   }
 
-  void stopping(const rclcpp::Time & /* time */) {}
+  void stopping(const rclcpp::Time & /* time */) {
+    pid_->reset();
+  }
 
   double updateCommand(
     double /* desired_position */, double /* desired_velocity */, double error_position,
