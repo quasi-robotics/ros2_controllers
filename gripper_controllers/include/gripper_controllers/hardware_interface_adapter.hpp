@@ -45,7 +45,7 @@ public:
   bool init(
     std::optional<
       std::reference_wrapper<hardware_interface::LoanedCommandInterface>> /* joint_handle */,
-    std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & /* node */)
+    const std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & /* node */)
   {
     return false;
   }
