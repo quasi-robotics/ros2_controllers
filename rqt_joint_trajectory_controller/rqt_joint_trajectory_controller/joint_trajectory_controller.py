@@ -413,7 +413,8 @@ class JointTrajectoryController(Plugin):
 
     def _update_single_cmd_cb(self, val, name):
         self._joint_pos[name]["command"] = val
-        self._update_cmd_cb()
+        if not self._update_act_pos_timer.isActive():
+            self._update_cmd_cb()
 
     def _update_cmd_cb(self):
         dur = []
