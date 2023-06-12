@@ -1136,8 +1136,13 @@ void JointTrajectoryController::goal_accepted_callback(
 
   // Setup goal status checking timer
   goal_handle_timer_ = get_node()->create_wall_timer(
-    action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
-    std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
+      action_monitor_period_.to_chrono<std::chrono::seconds>(),
+      [rt_goal, this]() {
+        rt_goal->RealtimeGoalHandle::runNonRealtime();
+        if(!*this->rt_active_goal_.readFromNonRT()) {
+          goal_handle_timer_.reset();
+        }
+      });
 }
 
 void JointTrajectoryController::fill_partial_goal(
