@@ -1141,8 +1141,10 @@ void JointTrajectoryController::goal_accepted_callback(
         rt_goal->RealtimeGoalHandle::runNonRealtime();
         if(!*this->rt_active_goal_.readFromNonRT()) {
           goal_handle_timer_.reset();
+          RCLCPP_INFO(get_node()->get_logger(), "Deleted goal monitoring timer");
         }
       });
+  RCLCPP_INFO(get_node()->get_logger(), "Created goal monitoring timer");
 }
 
 void JointTrajectoryController::fill_partial_goal(
