@@ -1140,7 +1140,7 @@ void JointTrajectoryController::goal_accepted_callback(
       [rt_goal, this]() {
         rt_goal->RealtimeGoalHandle::runNonRealtime();
         if(!*this->rt_active_goal_.readFromNonRT()) {
-          goal_handle_timer_.reset();
+          goal_handle_timer_->cancel();
           RCLCPP_INFO(get_node()->get_logger(), "Deleted goal monitoring timer");
         }
       });
