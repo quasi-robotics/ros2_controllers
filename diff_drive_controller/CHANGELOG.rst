@@ -2,6 +2,47 @@
 Changelog for package diff_drive_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.2.0 (2023-12-12)
+------------------
+
+4.1.0 (2023-12-01)
+------------------
+
+4.0.0 (2023-11-21)
+------------------
+* fix tests for API break of passing controller manager update rate in init method (`#854 <https://github.com/ros-controls/ros2_controllers/issues/854>`_)
+* [diff_drive_controller] Fixed typos in diff_drive_controller_parameter.yaml. (`#822 <https://github.com/ros-controls/ros2_controllers/issues/822>`_)
+* [diff_drive_controller] Remove non-stamped Twist option (`#812 <https://github.com/ros-controls/ros2_controllers/issues/812>`_)
+* Adjust tests after passing URDF to controllers (`#817 <https://github.com/ros-controls/ros2_controllers/issues/817>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota, Tony Baltovski
+
+3.17.0 (2023-10-31)
+-------------------
+
+3.16.0 (2023-09-20)
+-------------------
+
+3.15.0 (2023-09-11)
+-------------------
+* Update docs for diff drive controller (`#751 <https://github.com/ros-controls/ros2_controllers/issues/751>`_)
+* Contributors: Christoph Fröhlich
+
+3.14.0 (2023-08-16)
+-------------------
+
+3.13.0 (2023-08-04)
+-------------------
+* [DiffDriveController] Optional tf namespace prefixes instead of using node namespace (`#533 <https://github.com/ros-controls/ros2_controllers/issues/533>`_)
+* Contributors: Ben Holden, Bence Magyar
+
+3.12.0 (2023-07-18)
+-------------------
+
+3.11.0 (2023-06-24)
+-------------------
+* Added -Wconversion flag and fix warnings (`#667 <https://github.com/ros-controls/ros2_controllers/issues/667>`_)
+* Contributors: gwalck
+
 3.10.1 (2023-06-06)
 -------------------
 

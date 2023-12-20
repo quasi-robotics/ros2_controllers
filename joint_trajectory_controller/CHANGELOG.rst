@@ -2,6 +2,93 @@
 Changelog for package joint_trajectory_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.2.0 (2023-12-12)
+------------------
+* Cleanup package.xml und clarify tests of JTC. (`#889 <https://github.com/ros-controls/ros2_controllers/issues/889>`_)
+* Fix floating point comparison in JTC (`#879 <https://github.com/ros-controls/ros2_controllers/issues/879>`_)
+* Contributors: Abishalini Sivaraman, Dr. Denis
+
+4.1.0 (2023-12-01)
+------------------
+* [JTC] Continue with last trajectory-point on success (`#842 <https://github.com/ros-controls/ros2_controllers/issues/842>`_)
+* [JTC] Remove start_with_holding option (`#839 <https://github.com/ros-controls/ros2_controllers/issues/839>`_)
+* [JTC] Activate checks for parameter validation (`#857 <https://github.com/ros-controls/ros2_controllers/issues/857>`_)
+* [JTC] Improve update methods for tests (`#858 <https://github.com/ros-controls/ros2_controllers/issues/858>`_)
+* Contributors: Christoph Fröhlich
+
+4.0.0 (2023-11-21)
+------------------
+* fix tests for API break of passing controller manager update rate in init method (`#854 <https://github.com/ros-controls/ros2_controllers/issues/854>`_)
+* [JTC] Fix dynamic reconfigure of tolerances (`#849 <https://github.com/ros-controls/ros2_controllers/issues/849>`_)
+* [JTC] Remove unused home pose (`#845 <https://github.com/ros-controls/ros2_controllers/issues/845>`_)
+* [JTC] Activate update of dynamic parameters (`#761 <https://github.com/ros-controls/ros2_controllers/issues/761>`_)
+* [JTC] Fix tests when state offset is used (`#797 <https://github.com/ros-controls/ros2_controllers/issues/797>`_)
+* [JTC] Remove deprecation warnings, set `allow_nonzero_velocity_at_trajectory_end` default false (`#834 <https://github.com/ros-controls/ros2_controllers/issues/834>`_)
+* Adjust tests after passing URDF to controllers (`#817 <https://github.com/ros-controls/ros2_controllers/issues/817>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota, Dr Denis
+
+3.17.0 (2023-10-31)
+-------------------
+* Cleanup comments and unnecessary checks (`#803 <https://github.com/ros-controls/ros2_controllers/issues/803>`_)
+* Update requirements of state interfaces (`#798 <https://github.com/ros-controls/ros2_controllers/issues/798>`_)
+* [JTC] Add tests for acceleration command interface (`#752 <https://github.com/ros-controls/ros2_controllers/issues/752>`_)
+* Contributors: Christoph Fröhlich
+
+3.16.0 (2023-09-20)
+-------------------
+* [Docs] Improve interface description of JTC (`#770 <https://github.com/ros-controls/ros2_controllers/issues/770>`_)
+* [JTC] Add time-out for trajectory interfaces (`#609 <https://github.com/ros-controls/ros2_controllers/issues/609>`_)
+* [JTC] Rename parameter: normalize_error to angle_wraparound (`#772 <https://github.com/ros-controls/ros2_controllers/issues/772>`_)
+* [JTC] Fix hold position mode with goal_time>0 (`#758 <https://github.com/ros-controls/ros2_controllers/issues/758>`_)
+* [JTC] Add note on goal_time=0 in docs (`#773 <https://github.com/ros-controls/ros2_controllers/issues/773>`_)
+* Contributors: Christoph Fröhlich
+
+3.15.0 (2023-09-11)
+-------------------
+* [JTC] Make most parameters read-only (`#771 <https://github.com/ros-controls/ros2_controllers/issues/771>`_)
+* Contributors: Christoph Fröhlich
+
+3.14.0 (2023-08-16)
+-------------------
+* [JTC] Tolerance tests + Hold on time violation (`#613 <https://github.com/ros-controls/ros2_controllers/issues/613>`_)
+  * Add new test to ensure that controller goes into position holding when tolerances are violated
+  * Hold position if goal_time is exceeded with topic interface
+  * Fix hold on time-violation
+* [JTC] Fix typos, implicit cast, const member functions (`#748 <https://github.com/ros-controls/ros2_controllers/issues/748>`_)
+* Remove wrong description (`#742 <https://github.com/ros-controls/ros2_controllers/issues/742>`_)
+* [JTC] Explicitly set hold position (`#558 <https://github.com/ros-controls/ros2_controllers/issues/558>`_)
+* Contributors: Christoph Fröhlich
+
+3.13.0 (2023-08-04)
+-------------------
+* Small improvement in remapping (`#393 <https://github.com/ros-controls/ros2_controllers/issues/393>`_)
+* [JTC] Update trajectory documentation (`#714 <https://github.com/ros-controls/ros2_controllers/issues/714>`_)
+* [JTC] Reject messages with effort fields (`#699 <https://github.com/ros-controls/ros2_controllers/issues/699>`_) (`#719 <https://github.com/ros-controls/ros2_controllers/issues/719>`_)
+* [Doc] Fix links (`#715 <https://github.com/ros-controls/ros2_controllers/issues/715>`_)
+* Contributors: Andy Zelenak, Bence Magyar, Christoph Fröhlich
+
+3.12.0 (2023-07-18)
+-------------------
+* Remove reactivation test from ROS 1
+* Don't test update after cleanup
+* Fix namespace for parameter traits(`#703 <https://github.com/ros-controls/ros2_controllers/issues/703>`_)
+* Fixed update period computation in test (`#693 <https://github.com/ros-controls/ros2_controllers/issues/693>`_)
+* [JTC] Reject trajectories with nonzero terminal velocity (`#567 <https://github.com/ros-controls/ros2_controllers/issues/567>`_)
+* Compute velocity errors when using an effort command interface (`#679 <https://github.com/ros-controls/ros2_controllers/issues/679>`_)
+* Add test for velocity error with effort cmd interface (`#690 <https://github.com/ros-controls/ros2_controllers/issues/690>`_)
+* Revert "[JTC] Command final waypoint identically when traj_point_active_ptr\_ is nullptr (`#682 <https://github.com/ros-controls/ros2_controllers/issues/682>`_)"
+* [JTC] Fix time sources and wrong checks in tests (`#686 <https://github.com/ros-controls/ros2_controllers/issues/686>`_)
+* Increase action tests timeout (`#680 <https://github.com/ros-controls/ros2_controllers/issues/680>`_)
+* [JTC] Extend tests (`#612 <https://github.com/ros-controls/ros2_controllers/issues/612>`_)
+* [JTC] Command final waypoint identically when traj_point_active_ptr\_ is nullptr (`#682 <https://github.com/ros-controls/ros2_controllers/issues/682>`_)
+* Contributors: Christoph Fröhlich, Ethan Gordon, Lars Tingelstad, gwalck, Bence Magyar
+
+3.11.0 (2023-06-24)
+-------------------
+* jtc: fix minor typo in traj validation error msg (`#674 <https://github.com/ros-controls/ros2_controllers/issues/674>`_)
+* Added -Wconversion flag and fix warnings (`#667 <https://github.com/ros-controls/ros2_controllers/issues/667>`_)
+* Contributors: G.A. vd. Hoorn, gwalck
+
 3.10.1 (2023-06-06)
 -------------------
 

@@ -2,6 +2,48 @@
 Changelog for package admittance_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.2.0 (2023-12-12)
+------------------
+
+4.1.0 (2023-12-01)
+------------------
+
+4.0.0 (2023-11-21)
+------------------
+* fix tests for API break of passing controller manager update rate in init method (`#854 <https://github.com/ros-controls/ros2_controllers/issues/854>`_)
+* Adjust tests after passing URDF to controllers (`#817 <https://github.com/ros-controls/ros2_controllers/issues/817>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota
+
+3.17.0 (2023-10-31)
+-------------------
+
+3.16.0 (2023-09-20)
+-------------------
+
+3.15.0 (2023-09-11)
+-------------------
+* Update docs for diff drive controller (`#751 <https://github.com/ros-controls/ros2_controllers/issues/751>`_)
+* Contributors: Christoph Fröhlich
+
+3.14.0 (2023-08-16)
+-------------------
+
+3.13.0 (2023-08-04)
+-------------------
+* Fix out of bound access in admittance controller (`#721 <https://github.com/ros-controls/ros2_controllers/issues/721>`_)
+* Contributors: Abishalini Sivaraman
+
+3.12.0 (2023-07-18)
+-------------------
+* Activate AdmittanceControllerTestParameterizedInvalidParameters (`#711 <https://github.com/ros-controls/ros2_controllers/issues/711>`_)
+* Contributors: Christoph Fröhlich
+
+3.11.0 (2023-06-24)
+-------------------
+* Fix cpplint (`#681 <https://github.com/ros-controls/ros2_controllers/issues/681>`_)
+* Added -Wconversion flag and fix warnings (`#667 <https://github.com/ros-controls/ros2_controllers/issues/667>`_)
+* Contributors: Christoph Fröhlich, gwalck
+
 3.10.1 (2023-06-06)
 -------------------
 
