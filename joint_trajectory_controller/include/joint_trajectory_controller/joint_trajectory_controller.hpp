@@ -188,6 +188,7 @@ protected:
   using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
   using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
 
+  rclcpp::CallbackGroup::SharedPtr callback_group_;
   rclcpp_action::Server<FollowJTrajAction>::SharedPtr action_server_;
   RealtimeGoalHandleBuffer rt_active_goal_;  ///< Currently active action goal, if any.
   realtime_tools::RealtimeBuffer<bool> rt_has_pending_goal_;  ///< Is there a pending action goal?

@@ -858,13 +858,15 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
   action_monitor_period_ = rclcpp::Duration::from_seconds(1.0 / params_.action_monitor_rate);
 
   using namespace std::placeholders;
+  callback_group_ = get_node()->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   action_server_ = rclcpp_action::create_server<FollowJTrajAction>(
     get_node()->get_node_base_interface(), get_node()->get_node_clock_interface(),
     get_node()->get_node_logging_interface(), get_node()->get_node_waitables_interface(),
     std::string(get_node()->get_name()) + "/follow_joint_trajectory",
     std::bind(&JointTrajectoryController::goal_received_callback, this, _1, _2),
     std::bind(&JointTrajectoryController::goal_cancelled_callback, this, _1),
-    std::bind(&JointTrajectoryController::goal_accepted_callback, this, _1));
+    std::bind(&JointTrajectoryController::goal_accepted_callback, this, _1),
+    rcl_action_server_get_default_options(), callback_group_);
 
   resize_joint_trajectory_point(state_current_, dof_);
   resize_joint_trajectory_point_command(command_current_, dof_);
