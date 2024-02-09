@@ -2,6 +2,19 @@
 Changelog for package tricycle_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.5.0 (2024-01-31)
+------------------
+* [tricycle_controller] Use generate_parameter_library (`#957 <https://github.com/ros-controls/ros2_controllers/issues/957>`_)
+* Contributors: Christoph Fröhlich
+
+4.4.0 (2024-01-11)
+------------------
+
+4.3.0 (2024-01-08)
+------------------
+* Add few warning flags to error (`#961 <https://github.com/ros-controls/ros2_controllers/issues/961>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.2.0 (2023-12-12)
 ------------------
 
