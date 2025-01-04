@@ -70,10 +70,10 @@ struct AdmittanceState
     mass_inv.setZero();
     stiffness.setZero();
     selected_axes.setZero();
-    current_joint_pos = Eigen::VectorXd::Zero(num_joints);
-    joint_pos = Eigen::VectorXd::Zero(num_joints);
-    joint_vel = Eigen::VectorXd::Zero(num_joints);
-    joint_acc = Eigen::VectorXd::Zero(num_joints);
+    current_joint_pos = Eigen::VectorXd::Zero((Eigen::VectorXd::Index)num_joints);
+    joint_pos = Eigen::VectorXd::Zero((Eigen::VectorXd::Index)num_joints);
+    joint_vel = Eigen::VectorXd::Zero((Eigen::VectorXd::Index)num_joints);
+    joint_acc = Eigen::VectorXd::Zero((Eigen::VectorXd::Index)num_joints);
   }
 
   Eigen::VectorXd current_joint_pos;

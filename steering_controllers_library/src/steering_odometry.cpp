@@ -198,7 +198,7 @@ void SteeringOdometry::set_velocity_rolling_window_size(size_t velocity_rolling_
   reset_accumulators();
 }
 
-void SteeringOdometry::set_odometry_type(const unsigned int type) { config_type_ = type; }
+void SteeringOdometry::set_odometry_type(const unsigned int type) { config_type_ = (int)type; }
 
 double SteeringOdometry::convert_trans_rot_vel_to_steering_angle(double Vx, double theta_dot)
 {

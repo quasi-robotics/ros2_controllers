@@ -85,7 +85,7 @@ controller_interface::CallbackReturn SteeringControllersLibrary::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   params_ = param_listener_->get_params();
-  odometry_.set_velocity_rolling_window_size(params_.velocity_rolling_window_size);
+  odometry_.set_velocity_rolling_window_size((size_t)params_.velocity_rolling_window_size);
 
   configure_odometry();
 

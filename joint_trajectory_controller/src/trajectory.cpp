@@ -174,8 +174,8 @@ bool Trajectory::sample(
 
         interpolate_between_points(t0, point, t1, next_point, sample_time, output_state);
       }
-      start_segment_itr = begin() + i;
-      end_segment_itr = begin() + (i + 1);
+      start_segment_itr = begin() + (TrajectoryPointConstIter::difference_type)i;
+      end_segment_itr = begin() + (TrajectoryPointConstIter::difference_type)(i + 1);
       return true;
     }
   }
