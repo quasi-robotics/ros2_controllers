@@ -22,8 +22,6 @@
 #include <cassert>
 #include <memory>
 #include <string>
-#include <vector>
-#include <chrono>
 
 #include "control_toolbox/pid.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -170,9 +168,9 @@ public:
     // Time since the last call to update
     const auto period = last_update_time_ > std::chrono::steady_clock::time_point() ? std::chrono::steady_clock::now() - last_update_time_ : std::chrono::nanoseconds::zero();
     // Update PIDs
-    double raw_command = pid_->computeCommand(error_position, error_velocity, (uint64_t)period.count());
-    double command = std::min<double>(fabs(max_allowed_effort), std::max<double>(-fabs(max_allowed_effort), raw_command));
-    //RCLCPP_INFO_STREAM(rclcpp::get_logger("gazebo_ros2_control"), joint_handle_->get().get_prefix_name() << ": raw_command: " << raw_command << ", command: " << command << ", max_allowed_effort: " << max_allowed_effort << ", error_position: " << error_position << ", error_velocity: " << error_velocity);
+    double command = pid_->compute_command(error_position, error_velocity, period);
+    command = std::min<double>(
+      fabs(max_allowed_effort), std::max<double>(-fabs(max_allowed_effort), command));
     joint_handle_->get().set_value(command);
     last_update_time_ = std::chrono::steady_clock::now();
     return command;
